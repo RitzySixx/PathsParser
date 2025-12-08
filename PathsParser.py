@@ -228,11 +228,10 @@ class FileScanner:
     
     def _extract_paths_from_text(self, text):
         paths = []
-        pattern = r'(?:\\\\\?\\|\\\\)?(?:\\Device\\HarddiskVolume\d+\\[^\s\[\]<>:"|?*]+\.\w+|[A-Za-z]:\\[^\s\[\]<>:"|?*]+\.\w+|\\\\[^\s\[\]<>:"|?*]+\.\w+)'
+        pattern = r'(?:\\\\\?\\|\\\\)?(?:\\Device\\HarddiskVolume\d+\\[^[\]<>:"|?*,\n]+\.\w+|[A-Za-z]:\\[^[\]<>:"|?*,\n]+\.\w+|\\\\[^[\]<>:"|?*,\n]+\.\w+)'
         matches = re.findall(pattern, text, re.IGNORECASE)
         for match in matches:
             clean_path = match.strip()
-            clean_path = re.sub(r'[\s\[].*$', '', clean_path)
             clean_path = re.sub(r'[.,;:]*$', '', clean_path)
             if len(clean_path) > 10:
                 paths.append(clean_path)
@@ -263,12 +262,12 @@ class FileScanner:
             for i, file_path in enumerate(file_paths):
                 if not self.is_scanning:
                     break
-                normalized_path = file_path.lower()
-                if normalized_path in self.scanned_paths:
-                    continue
-                self.scanned_paths.add(normalized_path)
                 print(f"Scanning: {file_path}")
                 converted_path = self.convert_harddiskvolume_to_drive(file_path)
+                normalized_converted = converted_path.lower()
+                if normalized_converted in self.scanned_paths:
+                    continue
+                self.scanned_paths.add(normalized_converted)
                 signature_status = self.check_file_signature(converted_path)
                 if signature_status == "directory":
                     continue
