@@ -79,7 +79,7 @@ python -m PyInstaller --onefile --windowed --add-data "web;web" --hidden-import=
 
 ## 🖥️ Interface Preview
 
-The v2.0.0 interface features:
+The NEW interface features:
 - **Premium Glass Effect** - Advanced backdrop filters and transparency effects
 - **Smooth Animations** - Enhanced hover effects and transitions throughout
 - **Professional Layout** - Optimized grid system with better spacing and typography
