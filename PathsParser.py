@@ -208,20 +208,53 @@ class FileScanner:
         print(f"Scanning executable directory: {exe_dir}")
         file_paths = []
         found_files = []
-        for file_ext in ['*.txt', '*.csv']:
-            for file_path in Path(exe_dir).glob(file_ext):
-                found_files.append(file_path)
-                print(f"Found file: {file_path}")
-                try:
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
+        
+        # Use os.listdir() instead of Path.glob() for better Windows 10 compatibility
+        try:
+            # List all files in the directory
+            for filename in os.listdir(exe_dir):
+                file_lower = filename.lower()
+                if file_lower.endswith('.txt') or file_lower.endswith('.csv'):
+                    full_path = os.path.join(exe_dir, filename)
+                    found_files.append(full_path)
+                    print(f"Found file: {filename}")
+                    
+                    try:
+                        # Try multiple encodings to handle different Windows versions
+                        encodings = ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']
+                        content = None
+                        last_error = None
+                        
+                        for encoding in encodings:
+                            try:
+                                with open(full_path, 'r', encoding=encoding, errors='ignore') as f:
+                                    content = f.read()
+                                    print(f"Successfully read {filename} with encoding: {encoding}")
+                                    break
+                            except UnicodeDecodeError as e:
+                                last_error = e
+                                continue
+                            except Exception as e:
+                                last_error = e
+                                continue
+                        
+                        if content is None:
+                            print(f"Could not read {filename}: {last_error}")
+                            continue
+                            
+                        # Extract paths from the content
                         paths = self._extract_paths_from_text(content)
                         file_paths.extend(paths)
-                        print(f"Found {len(paths)} paths in {file_path.name}")
-                except Exception as e:
-                    print(f"Error reading {file_path}: {e}")
+                        print(f"Found {len(paths)} paths in {filename}")
+                        
+                    except Exception as e:
+                        print(f"Error reading {filename}: {e}")
+                        
+        except Exception as e:
+            print(f"Error scanning directory {exe_dir}: {e}")
+        
         print(f"Total files found: {len(found_files)}")
-        print(f"Files scanned: {[f.name for f in found_files]}")
+        print(f"Files scanned: {[os.path.basename(f) for f in found_files]}")
         unique_paths = list(set(file_paths))
         print(f"Total unique paths found: {len(unique_paths)}")
         return unique_paths
